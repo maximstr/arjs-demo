@@ -7,27 +7,15 @@
         <link rel="stylesheet/less" type="text/css" href="styles/main.less" />
         <script src="scripts/libs/less-1.3.3.min.js"></script>
         <script data-main="scripts/main" src="scripts/libs/require.js"></script>
+
+
+<script src="scripts/libs/magi.js"></script>
+<script src="scripts/libs/JSARToolKit.min.js"></script>
+
     </head>
     <body>
-        <<div id="out">
-            <video autoplay ></video>
+        <div id='out'>
+            <video id="video-screen" autoplay ></video>
         </div>
-        <script>
-             window.URL = window.URL || window.webkitURL;
-             navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
-          var onError = function(e) {
-            console.log('Reeeejected!', e);
-          };
-
-          navigator.getUserMedia({video: true}, function(localMediaStream) {
-            var video = document.querySelector('video');
-            video.src = window.URL.createObjectURL(localMediaStream);
-
-            video.onloadedmetadata = function(e) {
-              // Ready to go. Do some stuff.
-            };
-          }, onError);
-        </script>
     </body> 
 </html>

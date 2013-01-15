@@ -1,0 +1,362 @@
+<html><head>
+
+
+
+        <meta charset = "utf-8">
+        <title>arjs</title>
+        <link rel="stylesheet" type="text/css" href="styles/reset.css">
+        <link rel="stylesheet/less" type="text/css" href="styles/main.less" />
+        <script src="scripts/libs/less-1.3.3.min.js"></script>
+
+<script src="scripts/libs/magi.js"></script>
+<script src="scripts/libs/JSARToolKit.min.js"></script>
+
+</head>
+<body>
+    <div id="out">
+            <video id="video-screen" width="640" height="480" autoplay ></video>
+            <canvas id="video-canvas" width="640" height="480"></canvas>
+            <canvas id="gl-canvas" width="640" height="480"></canvas>
+    </div>
+<script>
+
+  /* 
+   *  camera
+   */
+  window.onload = function() {
+
+
+    var invideo = document.getElementById('video-screen');
+    var vcanvas = document.getElementById('video-canvas'); // canvas to draw our video on
+    var glCanvas = document.getElementById('gl-canvas');
+
+    var vwidth = 640,
+        vheight = 480;
+
+
+    window.URL = window.URL || window.webkitURL;
+    navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    var onError = function(e) {
+      console.log('ERROR! navigator.getUserMedia() - ', e);
+    };
+
+    navigator.getUserMedia({video: true}, function(localMediaStream) {
+      invideo.src = window.URL.createObjectURL(localMediaStream);
+
+        initAR();
+      invideo.onloadedmetadata = function(e) {
+        console.log('video.onloadedmetadata DONE');
+      };
+    }, onError);
+
+// "tests/output_4.ogg"
+
+    function initAR() {
+
+
+
+
+
+
+
+
+
+
+
+
+// I'm going to use a glMatrix-style matrix as an intermediary.
+// So the first step is to create a function to convert a glMatrix matrix into a Three.js Matrix4.
+THREE.Matrix4.prototype.setFromArray = function(m) {
+  return this.set(
+    m[0], m[4], m[8], m[12],
+    m[1], m[5], m[9], m[13],
+    m[2], m[6], m[10], m[14],
+    m[3], m[7], m[11], m[15]
+  );
+};
+
+// glMatrix matrices are flat arrays.
+var tmp = new Float32Array(16);
+
+// Create a camera and a marker root object for your Three.js scene.
+var camera = new THREE.Camera();
+scene.add(camera);
+
+var markerRoot = new THREE.Object3D();
+markerRoot.matrixAutoUpdate = false;
+
+// Add the marker models and suchlike into your marker root object.
+var cube = new THREE.Mesh(
+  new THREE.CubeGeometry(100,100,100),
+  new THREE.MeshBasicMaterial({color: 0xff00ff})
+);
+cube.position.z = -50;
+markerRoot.add(cube);
+
+// Add the marker root to your scene.
+scene.add(markerRoot);
+
+// Next we need to make the Three.js camera use the FLARParam matrix.
+param.copyCameraMatrix(tmp, 10, 10000);
+camera.projectionMatrix.setFromArray(tmp);
+
+
+// To display the video, first create a texture from it.
+var videoTex = new THREE.Texture(videoCanvas);
+
+// Then create a plane textured with the video.
+var plane = new THREE.Mesh(
+  new THREE.PlaneGeometry(2, 2, 0),
+  new THREE.MeshBasicMaterial({map: videoTex})
+);
+
+// The video plane shouldn't care about the z-buffer.
+plane.material.depthTest = false;
+plane.material.depthWrite = false;
+
+// Create a camera and a scene for the video plane and
+// add the camera and the video plane to the scene.
+var videoCam = new THREE.Camera();
+var videoScene = new THREE.Scene();
+videoScene.add(plane);
+videoScene.add(videoCam);
+
+...
+
+// On every frame do the following:
+function tick() {
+  // Draw the video frame to the canvas.
+  videoCanvas.getContext('2d').drawImage(video, 0, 0);
+  canvas.getContext('2d').drawImage(videoCanvas, 0, 0, canvas.width, canvas.height);
+
+  // Tell JSARToolKit that the canvas has changed.
+  canvas.changed = true;
+
+  // Update the video texture.
+  videoTex.needsUpdate = true;
+
+  // Detect the markers in the video frame.
+  var markerCount = detector.detectMarkerLite(raster, threshold);
+  for (var i=0; i<markerCount; i++) {
+    // Get the marker matrix into the result matrix.
+    detector.getTransformMatrix(i, resultMat);
+
+    // Copy the marker matrix to the tmp matrix.
+    copyMarkerMatrix(resultMat, tmp);
+
+    // Copy the marker matrix over to your marker root object.
+    markerRoot.matrix.setFromArray(tmp);
+  }
+
+  // Render the scene.
+  renderer.autoClear = false;
+  renderer.clear();
+  renderer.render(videoScene, videoCam);
+  renderer.render(scene, camera);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      console.log('initAR');
+        // DEBUG=true;
+
+        var ctx = vcanvas.getContext('2d');
+
+        
+
+        var raster = new NyARRgbRaster_Canvas2D(vcanvas); // create reader for the video canvas
+        var param = new FLARParam(vwidth,vheight); // create new Param for the canvas [~camera params]
+
+        var resultMat = new NyARTransMatResult(); // store matrices we get in this temp matrix
+
+        var detector = new FLARMultiIdMarkerDetector(param, 80); // marker size is 80 [transform matrix units]
+        detector.setContinueMode(true);
+
+
+        var display = new Magi.Scene(glCanvas);
+        // get the camera matrix from param and copy it to given 16-elem Float32Array
+        // 100 is near plane, 10000 is far plane
+        param.copyCameraMatrix(display.camera.perspectiveMatrix, 100, 10000);
+        display.camera.useProjectionMatrix = true;
+        var videoTex = new Magi.FlipFilterQuad();
+        // use the detect canvas as the video texture to keep video and detection in sync
+        videoTex.material.textures.Texture0 = new Magi.Texture();
+        videoTex.material.textures.Texture0.image = vcanvas;
+        videoTex.material.textures.Texture0.generateMipmaps = false;
+        display.scene.appendChild(videoTex);
+
+        var times = [];
+        var pastResults = {};
+        var lastTime = 0;
+        var cubes = {};
+
+        // video frame loop
+        display.scene.addFrameListener(function() {
+
+            if (invideo.paused) return;
+            if (window.paused) return;
+            if (invideo.currentTime == lastTime) return;
+            lastTime = invideo.currentTime;
+
+            ctx.drawImage(invideo, 0,0,vwidth,vheight); // draw video to canvas
+            var dt = new Date().getTime();
+
+            vcanvas.changed = true;
+
+            videoTex.material.textures.Texture0.changed = true;
+            videoTex.material.textures.Texture0.upload();
+
+            var t = new Date();
+
+            // detect markers from the canvas (using the raster reader we created for it)
+            // use 170 as threshold value (0-255)
+            var detected = detector.detectMarkerLite(raster, 128);
+
+            for (var idx = 0; idx<detected; idx++) {
+              var id = detector.getIdMarkerData(idx);
+              var currId;
+              // read back id marker data byte by byte (welcome to javaism)
+              if (id.packetLength > 4) {
+                currId = -1;
+              }else{
+                currId=0;
+                for (var i = 0; i < id.packetLength; i++ ) {
+                  currId = (currId << 8) | id.getPacketData(i);
+                  //console.log("id[", i, "]=", id.getPacketData(i));
+                }
+              }
+              //console.log("[add] : ID = " + currId);
+              if (!pastResults[currId]) {
+                pastResults[currId] = {};
+              }
+
+              // get the transform matrix for the marker
+              // getTransformMatrix copies it to resultMat
+              detector.getTransformMatrix(idx, resultMat);
+
+              pastResults[currId].age = 0;
+              pastResults[currId].transform = Object.asCopy(resultMat);
+              if (idx == 0) times.push(new Date()-t);
+            }
+
+
+            // create cubes on top of the results
+
+            for (var i in pastResults) {
+              var r = pastResults[i];
+              if (r.age > 5) delete pastResults[i];
+              r.age++;
+            }
+            for (var i in cubes) cubes[i].display = false;
+            for (var i in pastResults) {
+              if (!cubes[i]) {
+                var pivot = new Magi.Node();
+                pivot.transform = mat4.identity();
+                pivot.setScale(80);
+                var cube;
+                  cube = new Magi.Cube();
+                  cube.setZ(-0.125);
+                  cube.scaling[2] = 0.25;
+                pivot.appendChild(cube);
+                var txt = new Magi.Text(i.toString());
+                txt.setColor('black');
+                txt.setFontSize(48);
+                txt.setAlign(txt.centerAlign, txt.bottomAlign)
+                    .setZ(-0.6)
+                    .setY(-0.34)
+                    .setScale(1/80);
+                cube.appendChild(txt);
+                pivot.cube = cube;
+                pivot.txt = txt;
+                display.scene.appendChild(pivot);
+                cubes[i] = pivot;
+              }
+              cubes[i].display = true;
+              cubes[i].txt.setText(i.toString());
+              var mat = pastResults[i].transform;
+
+
+
+              // set transform matrix for the cube
+              // using a copy of the resultMat we got back above
+
+              var cm = cubes[i].transform;
+              cm[0] = mat.m00;
+              cm[1] = -mat.m10;
+              cm[2] = mat.m20;
+              cm[3] = 0;
+              cm[4] = mat.m01;
+              cm[5] = -mat.m11;
+              cm[6] = mat.m21;
+              cm[7] = 0;
+              cm[8] = -mat.m02;
+              cm[9] = mat.m12;
+              cm[10] = -mat.m22;
+              cm[11] = 0;
+              cm[12] = mat.m03;
+              cm[13] = -mat.m13;
+              cm[14] = mat.m23;
+              cm[15] = 1;
+            }
+
+            if (detected == 0) times.push(new Date()-t);
+            if (times.length > 100) {
+              if (window.console)
+                console.log(times.reduce(function(s,i){return s+i;})/times.length)
+              times.splice(0);
+            }
+        });
+      }
+  }
+
+
+
+// If you use the code of this example with a newer version of Threejs, the Z- and Y-axis are swapped.
+// You can solve this by changing the copyMatrix() function like so:
+// function copyMatrix(mat,cm){
+//   cm[0] = mat.m00;
+//   cm[1] = -mat.m10;
+//   cm[2] = mat.m20;
+//   cm[3] = 0;
+
+//   cm[4] = mat.m02;
+//   cm[5] = -mat.m12;
+//   cm[6] = mat.m22;
+//   cm[7] = 0;
+
+//   cm[8] = -mat.m01;
+//   cm[9] = mat.m11;
+//   cm[10] = -mat.m21;
+//   cm[11] = 0;
+
+//   cm[12] = mat.m03;
+//   cm[13] = -mat.m13;
+//   cm[14] = mat.m23;
+//   cm[15] = 1;
+// }
+
+
+
+
+
+</script>
+
+
+</body>
+</html>

@@ -3,8 +3,8 @@ require.config({
           'jquery' : 'http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.3.min'
      }
 });
-require(['jquery', 'info-bar'], function($, info) {
+
+require(['jquery', 'camera'], function($, camera) {
 	console.log($);
-	console.log(info)
-     info.set('pos', 'hello')
+	console.log(camera);
 });
