@@ -42,6 +42,8 @@
     };
 
     navigator.getUserMedia({video: true}, function(localMediaStream) {
+
+      window.URL.createObjectURL = window.URL.createObjectURL || function(obj) {return obj;}; // opera bug: http://my.opera.com/community/forums/topic.dml?id=1589432&t=1358318617&page=1#comment13564572
       invideo.src = window.URL.createObjectURL(localMediaStream);
 
         initAR();
