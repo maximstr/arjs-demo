@@ -4,7 +4,13 @@ require.config({
      }
 });
 
-require(['jquery', 'camera'], function($, camera) {
-	console.log($);
-	console.log(camera);
+require(['Camera', 'jquery'], function(Camera, $) {
+
+	$(function() {
+		console.log();
+		var cam = new Camera(640, 480, function(video) {
+			console.log('cam ready:' + video);
+		});
+	});
+
 });
