@@ -55,9 +55,9 @@ define(function(){
 
 	setInterval(function() {
 
-		// Draw the video frame to the raster canvas, scaled to 320x240.
+		// Draw the video frame to the raster canvas
 		videoCanvas.getContext('2d').drawImage(video, 0, 0);
-		ctx.drawImage(videoCanvas, 0, 0, 320, 240);
+		ctx.drawImage(videoCanvas, 0, 0, 320, 240);			// why not ctx.drawImage(video) ? need check!
 
 		// var dt = new Date().getTime();
 		// Tell the raster object that the underlying canvas has changed.
@@ -70,7 +70,19 @@ define(function(){
 		// The threshold parameter determines the threshold value
 		// for turning the video frame into a 1-bit black-and-white image.
 		var detected = detector.detectMarkerLite(raster, threshold);
+
+
+		/*
+			markers[currId] {
+				age_int
+				transform:resultMat
+				model:threejs-model
+			}
+
+		*/
+
 		// Go through the detected markers and get their IDs and transformation matrices.
+		// markers[currId].transform && age
 		for(var idx = 0; idx < detected; idx++) {
 			// Get the ID marker data for the current marker.
 			// ID markers are special kind of markers that encode a number.
@@ -94,8 +106,12 @@ define(function(){
 			// Get the transformation matrix for the detected marker.
 			detector.getTransformMatrix(idx, resultMat);
 			markers[currId].age = 0;
+			// Copy the result matrix into our marker tracker object.
 			markers[currId].transform = Object.asCopy(resultMat);
 		}
+
+
+		// delete too old markers from scene
 		for(var i in markers) {
 			var r = markers[i];
 			if(r.age > 1) {
@@ -104,8 +120,11 @@ define(function(){
 			}
 			r.age++;
 		}
+
+		// markers drawing
 		for(var i in markers) {
 			var m = markers[i];
+			// create new model for new marker
 			if(!m.model) {
 				m.model = new THREE.Object3D();
 				var cube = new THREE.Mesh(new THREE.CubeGeometry(100, 100, 100), new THREE.MeshLambertMaterial({
@@ -128,7 +147,8 @@ define(function(){
 	}, 15);
 
 
-	THREE.Matrix4.prototype.setFromArray = function(m) {
+	// I'm going to use a glMatrix-style matrix as an intermediary.
+	// So the first step is to create a function to convert a glMatrix matrix into a Three.js Matrix4.	THREE.Matrix4.prototype.setFromArray = function(m) {
 		return this.set(m[0], m[4], m[8], m[12], m[1], m[5], m[9], m[13], m[2], m[6], m[10], m[14], m[3], m[7], m[11], m[15]);
 	};
 
