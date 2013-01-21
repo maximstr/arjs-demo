@@ -3,10 +3,7 @@ require(["AugmentedReality"], function(AugmentedReality) {
     // html elements
     var arContainer = document.getElementById("ar_container");
     var modelButton = document.getElementById("model_button");
-    var downloadButton = document.getElementById("download_button");
-    var closeButton = document.getElementById("close_button");
     var fullscreenButton = document.getElementById("fullscreen_button");
-
 
     // pseudo classes instances
     var augmentedReality = new AugmentedReality(arContainer, stats);

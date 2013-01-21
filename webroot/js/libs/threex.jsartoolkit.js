@@ -8,10 +8,6 @@
  *   html5rocks.com/en/tutorials/webgl/jsartoolkit_webrtc/
  * - JSARToolKit repository by Ilmari Heikkinen too :)
  *   http://github.com/kig/JSARToolKit
- *
- * Marcelo Conceição chages:
- * - create one option to pass the camera.
- * - in the update method instead pass srcElement in the drawImage method we pass this._srcElement.
 */
 
 /**
@@ -32,7 +28,8 @@ THREEx.JSARToolKit	= function(opts){
 	this._canvasRasterW	= opts.canvasRasterW	|| this._srcElement.width;
 	this._canvasRasterH	= opts.canvasRasterH	|| this._srcElement.height;
 	this._maxAge		= opts.maxAge		|| 1;
-	this._camera		= opts.camera;
+
+	this._camera = opts.camera; // https://github.com/jeromeetienne/tquery.jsartoolkit/issues/2
 
 	this._markers		= {};
 	
