@@ -17,19 +17,63 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 _____________________________
 
-todo list
+todo
 
 
-+ new File-structure:
-	css (+less)
-	js
-		libs
-	assets
-		3d
-+ change loading order (using require.js)
-+ move demo into root
-+ 100% W/H
-+ start animation
-- try to use new model (head exported from blender)
-- add second model (for another marker)
-- json with parameters (marker<->model etc)
+$(+++++)
+
+- refactoring of main AR
+- load object with materials
+- loaded json with parameters (marker-id <-> model-url etc)
+- add more then one model and bind models with maker-id
+
+- improve AR quality (fake)
+- get distance between two models
+- smooth show&hide of models
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

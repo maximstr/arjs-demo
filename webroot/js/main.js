@@ -4,7 +4,12 @@ require.config({
      }
 });
 
-require(["jquery", "libs/Stats", "libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit", "initAR"], function() {
+require(["jquery", "libs/Stats", "libs/Detector", "libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], function() {
+
+	if (!Detector.webgl) {
+		alert('no webgl support');
+		return;
+	}
 
 	// stats
 	stats = new Stats();
@@ -12,11 +17,11 @@ require(["jquery", "libs/Stats", "libs/JSARToolKit", "libs/three", "libs/threex.
 	stats.domElement.setAttribute('id', 'stat-monitor');
 	document.body.appendChild( stats.domElement );
 
-	console.log("start");
+	require(["initAR"], function(){
+
+	});
 
 	$(function() {
-
-		console.log("ready");
 		window.onresize = resizeARVCanvas;
 		resizeARVCanvas();
 	});
@@ -40,6 +45,5 @@ require(["jquery", "libs/Stats", "libs/JSARToolKit", "libs/three", "libs/threex.
 		view.style.left = newX+"px";
 		view.style.top = newY+"px";
 	}
-
 
 });

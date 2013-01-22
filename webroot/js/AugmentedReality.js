@@ -7,13 +7,13 @@
 	// 5 - Panorama3;
 	// 6 - Panorama4;
 
-	AugmentedReality.SCREEN_WIDTH = 800;
-	AugmentedReality.SCREEN_HEIGHT = 600;
+	AugmentedReality.SCREEN_WIDTH = 640;
+	AugmentedReality.SCREEN_HEIGHT = 480;
 	AugmentedReality.MAX_AR_ELEMENTS = 7;
 	AugmentedReality.DURATION = 1000;
 	AugmentedReality.KEYFRAMES = 14;
 	AugmentedReality.INTERPOLATION = AugmentedReality.DURATION / AugmentedReality.KEYFRAMES;
-	AugmentedReality.THRESHOLD = 50//128;
+	AugmentedReality.THRESHOLD = 128;
 
 	function AugmentedReality(cont, stats) {
 		this.container = cont;
@@ -24,6 +24,8 @@
 		__createScene.call(this);
 		__createCamera.call(this);
 		__createWebCamVideo.call(this);
+
+		this.clock = new THREE.Clock();
 
 		var url = window.URL || window.webkitURL;
 		var createObjectURL = url.createObjectURL || url.createObjectURL;
@@ -50,11 +52,6 @@
 		return this.ARElement;
 	}
 
-	AugmentedReality.prototype.goFullscreen = function() {
-		var elem = document.getElementsByTagName("canvas")[0];
-		elem.webkitRequestFullScreen();
-	}
-
 	/**
 	 * Create webgl renderer
 	 */
@@ -69,6 +66,41 @@
 	 */
 	function __createScene() {
 		this.scene = new THREE.Scene();
+
+				var ambient = new THREE.AmbientLight( 0x222222 );
+				this.scene.add( ambient );
+
+
+				var light = new THREE.DirectionalLight( 0xffffff, 1.65 );
+				light.position.set( 0, 140, 500 );
+				light.position.multiplyScalar( 1.1 );
+				this.scene.add( light );
+
+				light.castShadow = true;
+
+				light.shadowMapWidth = 2048;
+				light.shadowMapHeight = 2048;
+
+				var d = 390;
+
+				light.shadowCameraLeft = -d * 2;
+				light.shadowCameraRight = d * 2;
+				light.shadowCameraTop = d;
+				light.shadowCameraBottom = -d;
+
+				light.shadowCameraFar = 2000;
+
+
+				//light.shadowCameraVisible = true;		// // LIGHTS
+		// var ambient = new THREE.AmbientLight( 0x444444 );
+		// this.scene.add( ambient );
+
+		// light = new THREE.SpotLight( 0xffffff );
+		// light.position.set( 0, 1500, 1500 );
+		// light.target.position.set( 0, 0, 0 );
+		// light.castShadow = true;
+		// this.scene.add( light );
+
 	}
 
 	/**
@@ -177,11 +209,13 @@
 		var texture, loader, material;
 		switch(this.ARElement) {
 			case 1:
-				texture = THREE.ImageUtils.loadTexture("assets/img/textures/frog.jpg");
-				material = new THREE.MeshBasicMaterial({ map: texture });
 
-				loader = new THREE.BinaryLoader();
-				loader.load("assets/models/frog/frog_bin.js", function(geometry) { __createMesh.call(this, geometry, material, marker.object3d) }.bind(this));
+//heavy-model/heavy.js
+
+				material = new THREE.MeshPhongMaterial( { color: 0xffDDCC, specular:0xffffff, shininess:100, wireframe: false} );
+				loader = new THREE.JSONLoader();
+				loader.load("assets/models/engine2.js", function(geometry) { __createMesh.call(this, geometry, material, marker.object3d, 150); }.bind(this));
+				// loader.load( "assets/models/heavy-model/heavy.js", function(geometry) { __createMesh.call(this, geometry, material, marker.object3d, 2); }.bind(this));
 				break;
 			case 2:
 				texture = THREE.ImageUtils.loadTexture("assets/img/textures/bird.jpg");
@@ -214,6 +248,9 @@
 				loader.load("assets/models/head/head_bin.js", function(geometry) { __createMesh.call(this, geometry, material, marker.object3d) }.bind(this));
 				break;
 		}
+
+
+
 	}
 
 	function __onDelete(e) {
@@ -228,37 +265,87 @@
 		var marker = this.markers[markerId];
 		marker.object3d.matrix.copy(e.matrix);
 		marker.object3d.matrixWorldNeedsUpdate = true;
+
+		var delta = 0.75 * this.clock.getDelta();
+		THREE.AnimationHandler.update( delta );
 	}
 
-	function __createMesh(geometry, material, object3d) {
-		this.mesh = new THREE.Mesh(geometry, material);
+
+	function ensureLoop( animation ) {
+		for ( var i = 0; i < animation.hierarchy.length; i ++ ) {
+			var bone = animation.hierarchy[ i ];
+			var first = bone.keys[ 0 ];
+			var last = bone.keys[ bone.keys.length - 1 ];
+
+			last.pos = first.pos;
+			last.rot = first.rot;
+			last.scl = first.scl;
+		}
+	}	
+
+	function __createMesh(geometry, material, object3d, scale) {
+		
+		var mesh = new THREE.Mesh(geometry, material);
+		this.mesh = mesh;
 		var s;
 
-		switch(this.ARElement) {
-			case 1:
-				this.mesh.rotation.y = 0;
-				this.mesh.rotation.x = 5;
-				this.mesh.rotation.z = 0;
-				s = 3;
-				this.mesh.scale.set(s, s, s);
-				break;
-			case 2:
-				this.mesh.rotation.y = 20;
-				this.mesh.rotation.x = 10;
-				break;
-			case 7:
-				this.mesh.rotation.y = 3;
-				s = 3;
-				this.mesh.scale.set(s, s, s);
-				break;
-			case 8:
-				this.mesh.rotation.x = 6;
-				s = 5;
-				this.mesh.scale.set(s, s, s);
-				break;
+		if (false && geometry.animation) {
+			ensureLoop( geometry.animation );
+			THREE.AnimationHandler.add( geometry.animation );
+
+			for ( var i = 0; i < geometry.materials.length; i ++ ) {
+				var m = geometry.materials[ i ];
+				m.skinning = true;
+				m.ambient.copy( m.color );
+				m.wrapAround = true;
+				m.perPixel = true;
+			}
+
+			mesh = new THREE.SkinnedMesh( geometry, new THREE.MeshFaceMaterial() );
+			// mesh.position.set( x, y - bb.min.y * s, z );
+			mesh.scale.set( s, s, s );
+			this.scene.add( mesh );
+
+			mesh.castShadow = true;
+			mesh.receiveShadow = true;
+
+			this.animation = this.animation || new THREE.Animation( mesh, geometry.animation.name );
+			this.animation.JITCompile = false;
+			this.animation.interpolationType = THREE.AnimationHandler.LINEAR;
+
+			this.animation.play();
+		}
+		else
+		{
+			switch(this.ARElement) {
+				case 1:
+					this.mesh.rotation.y = 0;
+					this.mesh.rotation.x = 5;
+					this.mesh.rotation.z = 0;
+					s = 3;
+					this.mesh.scale.set(s, s, s);
+					break;
+				case 2:
+					this.mesh.rotation.y = 20;
+					this.mesh.rotation.x = 10;
+					break;
+				case 7:
+					this.mesh.rotation.y = 3;
+					s = 3;
+					this.mesh.scale.set(s, s, s);
+					break;
+				case 8:
+					this.mesh.rotation.x = 6;
+					s = 5;
+					this.mesh.scale.set(s, s, s);
+					break;
+			}
 		}
 
-		this.mesh.doubleSided = true;
+		if (!!scale)
+			this.mesh.scale.set(scale, scale, scale);
+
+		// this.mesh.doubleSided = true;
 
 		object3d.add(this.mesh);
 	}
