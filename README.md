@@ -1,13 +1,13 @@
 
              _
             | |
-  - - - - - - - - - - - - - 
+  .........................
  |                         |
  |        arjs-demo        |
  |                         |
  |   UNDER CONSTRUCTION !  |
  |                         |
-  - - - - - - - - - - - - - 
+  .........................
              | |
              | |
         ^^^^^| |^^^^^
@@ -15,7 +15,6 @@
     ^^^^^^^^/   \^^^^^^^^
   ^^^^^^^^^^^^^^^^^^^^^^^^^
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_____________________________
 
 todo
 
@@ -23,13 +22,13 @@ todo
 $(+++++)
 
 - refactoring of main AR
-- load object with materials
-- loaded json with parameters (marker-id <-> model-url etc)
-- add more then one model and bind models with maker-id
+  + simplify to one marker
+  - change OOP model (no call etc)
+  - all options as arguments (firstly js only format)
+  - add more then one marker support (lazy loading)
+  - improve AR quality (smooth show&hide, get rid of jumps)
 
-- improve AR quality (fake)
-- get distance between two models
-- smooth show&hide of models
+- get distance between models
 
 
 

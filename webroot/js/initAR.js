@@ -1,4 +1,4 @@
-require(["AugmentedReality"], function(AugmentedReality) {
+require(["AR"], function(AR) {
     
     // html elements
     var arContainer = document.getElementById("ar_container");
@@ -6,7 +6,7 @@ require(["AugmentedReality"], function(AugmentedReality) {
     //var fullscreenButton = document.getElementById("fullscreen_button");
 
     // pseudo classes instances
-    var augmentedReality = new AugmentedReality(arContainer, stats);
+    var augmentedReality = new AR(arContainer);
 
     // event listeners
     //modelButton.addEventListener("click", onButtonClick);

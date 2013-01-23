@@ -4,7 +4,7 @@ require.config({
      }
 });
 
-require(["jquery", "libs/Stats", "libs/Detector", "libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], function() {
+require(["jquery", "libs/Stats", "libs/Detector"], function() {
 
 	if (!Detector.webgl) {
 		alert('no webgl support');
