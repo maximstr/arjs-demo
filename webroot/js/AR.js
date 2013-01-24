@@ -1,4 +1,4 @@
-define('AR', ["libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], function() {
+define('AR', ["ARModel", "libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], function(ARModel) {
 
 
 	// const
@@ -157,8 +157,6 @@ define('AR', ["libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], func
 
 			var type = e.type;
 
-			console.log(e);
-
 			if(type === "update") onUpdate(e);
 			else if(type === "create") onCreate(e);
 			else if(type === "delete") onDelete(e);
@@ -166,47 +164,41 @@ define('AR', ["libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], func
 		}
 
 		function onUpdate(e) {
-			var markerId = e.markerId,
-				marker = markers[markerId];
+			var marker = markers[e.markerId];
 
-			marker.object3d.matrix.copy(e.matrix);
-			marker.object3d.matrixWorldNeedsUpdate = true;
+			if (marker) {
+				marker.object3d.matrix.copy(e.matrix);
+				marker.object3d.matrixWorldNeedsUpdate = true;
+			}
 		}
 
 		function onCreate(e) {
 
-			var marker = { },
-				object3d = new THREE.Object3D();
-			markers[e.markerId] = marker;
+			if (!markers[e.markerId]) {
+				new ARModel(e.markerId).load("assets/models/engine1.js", function(mod){
+		
+					var marker = {model:mod, object3d:mod.object3d};
+					scene.add(marker.object3d);
+					mod.show(function(){
+						console.log("model is visible now");
+					});
+					markers[e.markerId] = marker;
+				});
+			}
+			else
+			{
+				markers[e.markerId].model.show(function(mod){
 
-			marker.object3d = object3d;
-			object3d.matrixAutoUpdate = false;
-			scene.add(object3d);
-
-			var texture, loader, material;
-
-			// load engine test model
-			material = new THREE.MeshPhongMaterial( { color: 0xcccccc, specular:0xffffff, shininess:100, wireframe: false} );
-			loader = new THREE.JSONLoader();
-			loader.load("assets/models/engine1.js", function(geometry) { 
-				// create mesh
-				mesh = new THREE.Mesh(geometry, material);
-				var s = 150;
-				mesh.rotation.y = 0;
-				mesh.rotation.x = 5;
-				mesh.rotation.z = 0;
-				mesh.scale.set(s, s, s);
-				// mesh.doubleSided = true;
-				object3d.add(mesh);
-			});
+				});
+			}
 		}
 
 		function onDelete(e) {
-			var markerId = e.markerId,
-				marker = markers[markerId];
-
-			scene.remove(marker.object3d);
-			delete markers[markerId];
+			var marker = markers[e.markerId];
+			marker.model.hide(function(){
+				scene.remove(marker.object3d);
+				delete markers[markerId];
+			});
 		}
 
 		function render() {
