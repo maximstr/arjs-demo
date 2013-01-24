@@ -1,6 +1,5 @@
 define('AR', ["ARModel", "libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], function(ARModel) {
 
-
 	// const
 	AR.SCREEN_WIDTH = 640;
 	AR.SCREEN_HEIGHT = 480;
@@ -8,7 +7,7 @@ define('AR', ["ARModel", "libs/JSARToolKit", "libs/three", "libs/threex.jsartool
 	AR.DURATION = 1000;
 	AR.KEYFRAMES = 14;
 	AR.INTERPOLATION = AR.DURATION / AR.KEYFRAMES;
-	AR.THRESHOLD = 50//128;
+	AR.THRESHOLD = 128;
 
 	function AR(container, stats) {
 
@@ -51,7 +50,7 @@ define('AR', ["ARModel", "libs/JSARToolKit", "libs/three", "libs/threex.jsartool
 		function initWebGL() {
 
 			// Create webgl renderer
-			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer = new THREE.WebGLRenderer({ antialias: false });
 			renderer.setSize(AR.SCREEN_WIDTH, AR.SCREEN_HEIGHT);
 			container.appendChild(renderer.domElement);
 
@@ -164,20 +163,63 @@ define('AR', ["ARModel", "libs/JSARToolKit", "libs/three", "libs/threex.jsartool
 		}
 
 		function onUpdate(e) {
+
 			var marker = markers[e.markerId];
 
 			if (marker) {
-				marker.object3d.matrix.copy(e.matrix);
-				marker.object3d.matrixWorldNeedsUpdate = true;
+				marker.model.update(e.matrix, camera);
+				var p0 = marker.model.pos2d, p1;
+				for (var id in markers) {
+					if (id != marker.id) {
+						var m = markers[id];
+
+						//
+						// calculate distance
+						p1 = m.model.pos2d;
+						var dist = Math.sqrt(Math.pow(p0.x-p1.x, 2) + Math.pow(p0.y-p1.y, 2));
+
+						//
+						// debug out
+						var c = document.getElementById('debug-canva');
+						if (!c) {
+							c = document.createElement("canvas")
+							c.setAttribute('id', 'debug-canva');
+							c.width = AR.SCREEN_WIDTH;
+							c.height = AR.SCREEN_HEIGHT;
+							container.appendChild(c);
+						}
+						c.width = c.width;
+						var ctx=c.getContext("2d");
+						ctx.strokeStyle = 'rgba(255,0,0,0.7)';
+						ctx.lineWidth = 2;
+						ctx.moveTo(p0.x,p0.y);
+						ctx.lineTo(p1.x,p1.y);
+						ctx.stroke();
+					}
+				}
 			}
 		}
 
 		function onCreate(e) {
 
 			if (!markers[e.markerId]) {
-				new ARModel(e.markerId).load("assets/models/engine1.js", function(mod){
+				// create new marker
+
+				var data = e.markerId == 0 ? 
+					{url:"assets/models/monkey.js"} :
+					{
+						url:"assets/models/engine1.js",
+						mat:null
+					};
+
+				new ARModel(e.markerId).load(data, function(mod){
 		
-					var marker = {model:mod, object3d:mod.object3d};
+					var marker = {
+						id:e.markerId,
+						model:mod,
+						object3d:mod.object3d
+					};
+
 					scene.add(marker.object3d);
 					mod.show(function(){
 						console.log("model is visible now");
@@ -187,6 +229,7 @@ define('AR', ["ARModel", "libs/JSARToolKit", "libs/three", "libs/threex.jsartool
 			}
 			else
 			{
+				// unveil old one
 				markers[e.markerId].model.show(function(mod){
 
 				});
@@ -195,10 +238,12 @@ define('AR', ["ARModel", "libs/JSARToolKit", "libs/three", "libs/threex.jsartool
 
 		function onDelete(e) {
 			var marker = markers[e.markerId];
-			marker.model.hide(function(){
-				scene.remove(marker.object3d);
-				delete markers[markerId];
-			});
+			if (marker) {
+				marker.model.hide(function(){
+					scene.remove(marker.object3d);
+					delete markers[e.markerId];
+				}.bind(this));
+			}
 		}
 
 		function render() {
@@ -243,32 +288,6 @@ define('AR', ["ARModel", "libs/JSARToolKit", "libs/three", "libs/threex.jsartool
 		}
 
 	}
-
-
-	// function animate() {
-	// 	requestAnimationFrame(animate.bind(this));
-
-	// 	if (this.mesh && this.ARElement == 2) {
-	// 		var time = Date.now() % AugmentedReality.DURATION;
-	// 		var keyframe = Math.floor(time / AugmentedReality.INTERPOLATION);
-
-	// 		if (keyframe != this.currentKeyframe) {
-	// 			this.mesh.morphTargetInfluences[this.lastKeyframe] = 0;
-	// 			this.mesh.morphTargetInfluences[this.currentKeyframe] = 1;
-	// 			this.mesh.morphTargetInfluences[keyframe] = 0;
-
-	// 			this.lastKeyframe = this.currentKeyframe;
-	// 			this.currentKeyframe = keyframe;
-	// 		}
-
-	// 		this.mesh.morphTargetInfluences[keyframe] = (time % AugmentedReality.INTERPOLATION) / AugmentedReality.INTERPOLATION;
-	// 		this.mesh.morphTargetInfluences[this.lastKeyframe] = 1 - this.mesh.morphTargetInfluences[keyframe];
-	// 	}
-
-	// 	render.call(this);
-	// }
-
-
 
 	return AR;
 

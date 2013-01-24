@@ -18,7 +18,6 @@ require(["jquery", "libs/Stats", "libs/Detector"], function() {
 	document.body.appendChild( stats.domElement );
 
 	require(["initAR"], function(){
-
 	});
 
 	$(function() {
