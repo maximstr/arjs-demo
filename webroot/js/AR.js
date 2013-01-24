@@ -8,11 +8,9 @@ define('AR', ["libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], func
 	AR.DURATION = 1000;
 	AR.KEYFRAMES = 14;
 	AR.INTERPOLATION = AR.DURATION / AR.KEYFRAMES;
-	AR.THRESHOLD = 128;
+	AR.THRESHOLD = 50//128;
 
-	function AR(container) {
-
-		console.log(container);
+	function AR(container, stats) {
 
 		var	// webcam
 			video,
@@ -154,28 +152,26 @@ define('AR', ["libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], func
 		 *                                              *
 		 * * * * * * * * * * * * * * * * * ** * * * * * */
 
+		 // e = {type: "update", markerId: 64, matrix: THREE.Matrix4}
 		function onARChange(e) {
-			// if (stats) stats.begin();
+
+			var type = e.type;
 
 			console.log(e);
-			console.log(this);
 
-			// if(e.type === "create") {
-			// 	onCreate.call(this, e);
-			// }
-			// else if(e.type === "delete") {
-			// 	onDelete.call(this, e);
-			// }
-			// else if(e.type === "update") {
-			// 	onUpdate.call(this, e);
-			// }
-			// else {
-			// 	console.assert(false, "invalid event type " + e.type);
-			// }
-
-			// if (stats) stats.end();
+			if(type === "update") onUpdate(e);
+			else if(type === "create") onCreate(e);
+			else if(type === "delete") onDelete(e);
+			else console.error("unknown event type:" + type);
 		}
 
+		function onUpdate(e) {
+			var markerId = e.markerId,
+				marker = markers[markerId];
+
+			marker.object3d.matrix.copy(e.matrix);
+			marker.object3d.matrixWorldNeedsUpdate = true;
+		}
 
 		function onCreate(e) {
 
@@ -196,6 +192,9 @@ define('AR', ["libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], func
 				// create mesh
 				mesh = new THREE.Mesh(geometry, material);
 				var s = 150;
+				mesh.rotation.y = 0;
+				mesh.rotation.x = 5;
+				mesh.rotation.z = 0;
 				mesh.scale.set(s, s, s);
 				// mesh.doubleSided = true;
 				object3d.add(mesh);
@@ -208,14 +207,6 @@ define('AR', ["libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], func
 
 			scene.remove(marker.object3d);
 			delete markers[markerId];
-		}
-
-		function onUpdate(e) {
-			var markerId = e.markerId,
-				marker = markers[markerId];
-
-			marker.object3d.matrix.copy(e.matrix);
-			marker.object3d.matrixWorldNeedsUpdate = true;
 		}
 
 		function render() {
@@ -231,7 +222,33 @@ define('AR', ["libs/JSARToolKit", "libs/three", "libs/threex.jsartoolkit"], func
 			renderer.render(scene, camera);
 		}
 
-		function animate() {}
+		function animate() {
+
+			if (stats) stats.begin();
+
+			requestAnimationFrame(animate);
+
+			// if (mesh && ARElement == 2) {
+			// 	var time = Date.now() % AugmentedReality.DURATION;
+			// 	var keyframe = Math.floor(time / AugmentedReality.INTERPOLATION);
+
+			// 	if (keyframe != this.currentKeyframe) {
+			// 		this.mesh.morphTargetInfluences[this.lastKeyframe] = 0;
+			// 		this.mesh.morphTargetInfluences[this.currentKeyframe] = 1;
+			// 		this.mesh.morphTargetInfluences[keyframe] = 0;
+
+			// 		this.lastKeyframe = this.currentKeyframe;
+			// 		this.currentKeyframe = keyframe;
+			// 	}
+
+			// 	this.mesh.morphTargetInfluences[keyframe] = (time % AugmentedReality.INTERPOLATION) / AugmentedReality.INTERPOLATION;
+			// 	this.mesh.morphTargetInfluences[this.lastKeyframe] = 1 - this.mesh.morphTargetInfluences[keyframe];
+			// }
+
+			render();
+
+			if (stats) stats.end();
+		}
 
 	}
 

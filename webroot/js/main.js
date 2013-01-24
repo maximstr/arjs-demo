@@ -37,8 +37,8 @@ require(["jquery", "libs/Stats", "libs/Detector"], function() {
 		view = document.getElementById('ar_container');
 		var newW = ow * p,
 			newH = oh * p,
-			newX = Math.round((ww - newW) / 2),
-			newY = Math.round((wh - newH) / 2);
+			newX = Math.ceil((ww - newW) / 2),
+			newY = Math.ceil((wh - newH) / 2);
 		
 		view.style.width = newW+"px";
 		view.style.height = newH+"px";

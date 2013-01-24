@@ -6,7 +6,7 @@ require(["AR"], function(AR) {
     //var fullscreenButton = document.getElementById("fullscreen_button");
 
     // pseudo classes instances
-    var augmentedReality = new AR(arContainer);
+    var augmentedReality = new AR(arContainer, stats);
 
     // event listeners
     //modelButton.addEventListener("click", onButtonClick);
